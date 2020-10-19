@@ -7,7 +7,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// WebSocketのコネクションに対するポインタ
+// 接続されるクライアント（WebSocketのコネクションに対するポインタを定義）
 var clients = make(map[*websocket.Conn]bool)
 
 // クライアントから受け取るメッセージを格納
@@ -25,37 +25,38 @@ func HandleClients(w http.ResponseWriter, r *http.Request) {
 	// ゴルーチンで起動
 	go broadcastMessagesToClients()
 	// websocket の状態を更新
-	websocket, err := upgrader.Upgrade(w, r, nil)
+	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Fatal("error upgrading GET request to a websocket::", err)
 	}
 	// websocket を閉じる
-	defer websocket.Close()
+	defer ws.Close()
 
-	clients[websocket] = true
+	// 受け取ったリクエストをクライアントとして登録
+	clients[ws] = true
 
+	// WebSocketからのメッセージを待ち続ける
 	for {
-		var message Message
+		var msg Message
 		// メッセージ読み込み
-		err := websocket.ReadJSON(&message)
+		err := ws.ReadJSON(&msg)
 		if err != nil {
 			log.Printf("error occurred while reading message: %v", err)
-			delete(clients, websocket)
+			delete(clients, ws)
 			break
 		}
-		// メッセージを受け取る
-		broadcast <- message
+		// メッセージを受け取ったらbroadcastチャネルに送る
+		broadcast <- msg
 	}
 }
 
 func broadcastMessagesToClients() {
 	for {
 		// メッセージ受け取り
-		message := <-broadcast
-		// クライアントの数だけループ
+		msg := <-broadcast
+		// 現在接続しているクライアント全てにメッセージを送信する
 		for client := range clients {
-			//　書き込む
-			err := client.WriteJSON(message)
+			err := client.WriteJSON(msg)
 			if err != nil {
 				log.Printf("error occurred while writing message to client: %v", err)
 				client.Close()
