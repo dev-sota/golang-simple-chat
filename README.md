@@ -12,6 +12,6 @@ POST request
 
 ```
 curl --location --request POST 'http://localhost:8080/send' \
---form 'userName=dev-sota' \
---form 'message=hi'
+--form 'userName=yourname' \
+--form 'message=hi!'
 ```

@@ -44,14 +44,19 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 			delete(clients, ws)
 			break
 		}
-		// メッセージを受け取ったらbroadcastチャネルに送る
+		// メッセージを受け取ったらbroadcastチャネルに送信
 		broadcast <- msg
 	}
 }
 
+func handleRequest(w http.ResponseWriter, r *http.Request) {
+	msg := Message{r.FormValue("name"), r.FormValue("message")}
+	broadcast <- msg
+}
+
 func handleMessages() {
 	for {
-		// メッセージ受け取り
+		// メッセージ受信
 		msg := <-broadcast
 		// 現在接続しているクライアント全てにメッセージを送信する
 		for client := range clients {
@@ -72,16 +77,11 @@ func main() {
 	})
 
 	http.HandleFunc("/chat", handleConnections)
-	http.HandleFunc("/send", handleParams)
+	http.HandleFunc("/send", handleRequest)
 	go handleMessages()
 
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatalln(err)
 	}
-}
-
-func handleParams(w http.ResponseWriter, r *http.Request) {
-	msg := Message{r.FormValue("name"), r.FormValue("message")}
-	broadcast <- msg
 }
