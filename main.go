@@ -18,7 +18,8 @@ var upgrader = websocket.Upgrader{}
 
 // クライアントからは JSON 形式で受け取る
 type Message struct {
-	Message string
+	UserName string `json:"userName"`
+	Message  string `json:"message"`
 }
 
 func handleConnections(w http.ResponseWriter, r *http.Request) {
@@ -71,10 +72,16 @@ func main() {
 	})
 
 	http.HandleFunc("/chat", handleConnections)
+	http.HandleFunc("/send", handleParams)
 	go handleMessages()
 
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatalln(err)
 	}
+}
+
+func handleParams(w http.ResponseWriter, r *http.Request) {
+	msg := Message{r.FormValue("name"), r.FormValue("message")}
+	broadcast <- msg
 }
