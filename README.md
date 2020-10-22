@@ -1,17 +1,9 @@
 # golang-simple-chat
 
-Visit http://localhost:8080
+Visit http://localhost:8080/room/1
 
-Connecting and communicating with a WebSocket server
-
-```
-wscat -c ws://localhost:8080/chat
-```
-
-POST request
+Connecting and communicating from console to WebSocket server
 
 ```
-curl --location --request POST 'http://localhost:8080/send' \
---form 'userName=yourname' \
---form 'message=hi!'
+wscat -c ws://localhost:8080/ws/1
 ```
