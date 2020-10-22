@@ -1,14 +1,23 @@
 package main
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+)
 
 func main() {
-	r := gin.New()
-	r.LoadHTMLFiles("index.html")
+	go h.run()
 
-	r.GET("/room/:roomId", func(c *gin.Context) {
+	router := gin.New()
+	router.LoadHTMLFiles("index.html")
+
+	router.GET("/room/:roomId", func(c *gin.Context) {
 		c.HTML(200, "index.html", nil)
 	})
 
-	_ = r.Run()
+	router.GET("/ws/:roomId", func(c *gin.Context) {
+		roomId := c.Param("roomId")
+		serveWs(c.Writer, c.Request, roomId)
+	})
+
+	_ = router.Run("0.0.0.0:8080")
 }
